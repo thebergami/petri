@@ -3,4 +3,3 @@
 .git
 .git/*
 cmake-build-debug/
-cmake-build-debug/*
