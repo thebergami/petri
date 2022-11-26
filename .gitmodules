@@ -1,3 +1,0 @@
-[submodule "submodules/yaucl_graph"]
-	path = submodules/yaucl_graph
-	url = https://github.com/datagram-db/yaucl-graph
