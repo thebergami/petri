@@ -25,70 +25,70 @@
 
 #include "giacomobergami/petri/reachability_graph.h"
 
-std::unordered_map<std::string, std::unordered_map<std::string, std::unordered_set<std::string>>>
-giacomobergami::petri::reachability_graph(const giacomobergami::petri::elementary_net &net) {
-    std::unordered_map<std::string, std::unordered_map<std::string, std::unordered_set<std::string>>> mark_edges;
-    std::unordered_map<std::string, giacomobergami::petri::elementary_net> places_memo;
+size_t generateNewNode(const giacomobergami::petri::elementary_net &net,
+                     giacomobergami::petri::reachability_graph &graph,
+                     std::unordered_map<std::string, size_t> &places_memo, bool& initialNode,
+                     const std::string &M_src) {
+    auto src_ptr = places_memo.find(M_src);
+    size_t src_id;
+    if (src_ptr == places_memo.end()) {
+        src_id = graph.addUniqueStateOrGetExisting(net.M);
+        places_memo[M_src] = src_id;
+        if (initialNode) {
+            graph.addToInitialNodesFromId(src_id);
+            initialNode = false;
+        }
+    } else {
+        src_id = src_ptr->second;
+    }
+    return src_id;
+}
+
+giacomobergami::petri::reachability_graph
+giacomobergami::petri::as_reachability_graph(const giacomobergami::petri::elementary_net &net) {
+    giacomobergami::petri::reachability_graph out;
+    std::unordered_map<std::string, size_t> places_memo;
+    std::unordered_set<std::string> visited;
     std::queue<giacomobergami::petri::elementary_net> Q;
     Q.emplace(net);
+    bool isInitialNode = true;
     while (!Q.empty()) {
         giacomobergami::petri::elementary_net& ref = Q.front();
-        std::string current = ref.toReachability();
-        if (places_memo.contains(current)) {
+        std::string M_src = ref.toReachability();
+        if (visited.contains(M_src)) {
             Q.pop();
         } else {
-            places_memo[current] = net;
+            visited.insert(M_src);
+            auto src_id = generateNewNode(net, out, places_memo, isInitialNode, M_src);
             for (const auto& fired : ref.enabledTransitions()) {
                 auto val = ref.fireEnabledTransition(fired);
                 if (val) {
-                    mark_edges[current][fired].insert(val.value().toReachability());
+                    auto M_dst = val.value().toReachability();
+                    auto dst_id = generateNewNode(val.value(), out, places_memo, isInitialNode, M_dst);
+                    out.addNewEdgeFromId(src_id, dst_id, std::make_pair(fired, net.firing_weight.at(fired)));
                     Q.emplace(val.value());
                 }
             }
             Q.pop();
         }
     }
-    return mark_edges;
+    return out;
 }
 
-std::string giacomobergami::petri::reachability_to_graphviz(
-        const std::unordered_map<std::string, std::unordered_map<std::string, std::unordered_set<std::string>>> &mark_edges) {
-    std::unordered_set<std::string> marks;
-    std::unordered_map<std::string, size_t> id;
-    for (const auto& it : mark_edges) {
-        if (marks.insert(it.first).second) {
-            id[it.first] = marks.size()-1;
-        }
-        for (const auto& e : it.second) {
-            for (const auto& target : e.second) {
-                if (marks.insert(target).second) {
-                    id[target] = marks.size()-1;
-                }
-            }
-        }
+
+giacomobergami::petri::reachability_graph
+giacomobergami::petri::as_probabilistic_reachability_graph(const giacomobergami::petri::elementary_net& net) {
+    auto g = giacomobergami::petri::as_reachability_graph(net);
+    for (size_t i = 0, N = g.maximumNodeId(); i<N; i++) {
+        auto out = g.g.getOutgoingEdgesId(i);
+        double total = 0.0;
+        for (size_t j = 0, M = out.size(); j<M; j++)
+            total += g.getEdgeLabel(out.at(j)).second;
+        for (size_t j = 0, M = out.size(); j<M; j++)
+            g.setEdgeLabel(out.at(j)).second = g.setEdgeLabel(out.at(j)).second / total;
     }
-    std::stringstream os;
-    os << "digraph G {\n"
-          "  center=true; margin=1; \n"
-          "\n"
-          "  fontsize=12;\n"
-          "  normalize=true;\n"
-          " \n"
-          "  edge [len=1.3, minlen=1];\n"
-          "  node [shape=none, fixedsize=true];\n"
-          "\n"
-          "  i [label=\"[i]\"];\n";
-    for (const auto& it : id) {
-        os << "p" << it.second << " [label=<&#91;" << it.first << "&#93;>];\n";
-    }
-    for (const auto& it : mark_edges) {
-        for (const auto& e : it.second) {
-            for (const auto& target : e.second) {
-                os << "p" << id[it.first] << "->p" << id[target] << "[label="<<e.first<<"];\n";
-            }
-        }
-    }
-    os << "\n"
-          "}";
-    return os.str();
+    return g;
 }
+
+
+

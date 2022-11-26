@@ -26,22 +26,26 @@
 #ifndef PETRI_ELEMENTARY_NET_H
 #define PETRI_ELEMENTARY_NET_H
 
-#include <map>
-#include <unordered_map>
+#include <string>
+#include <yaucl/hashing/umap_hash.h>
 #include <vector>
 #include <optional>
 #include <giacomobergami/petri/petri.h>
 #include <sstream>
+#include <yaucl/graphs/NodeLabelBijectionFA.h>
 
 namespace giacomobergami::petri {
+
+    using reachability_graph = NodeLabelBijectionFA<std::map<std::string, size_t>, std::pair<std::string, double>>;
 
         struct elementary_net {
             struct petri net;
             std::map<std::string, size_t> M;
+            std::unordered_map<std::string, double> firing_weight;
             std::unordered_map<std::string, std::unordered_map<std::string, size_t>> input_places, output_places;
 
             void add_place_with_tokens(const std::string& mark, size_t n = 0);
-            void add_transition(const std::string& transition);
+            void add_transition(const std::string& transition, double firing_weight = 1.0);
             bool add_input_place(const std::string& s, const std::string& t, size_t n = 1);
             bool add_output_place(const std::string& t, const std::string& s, size_t n = 1);
 

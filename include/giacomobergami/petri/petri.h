@@ -31,8 +31,8 @@
 #include <string>
 #include <ostream>
 
-namespace giacomobergami::petri {
 
+namespace giacomobergami::petri {
         struct petri {
             std::unordered_set<std::string> P;
             std::unordered_set<std::string> T;
@@ -46,8 +46,8 @@ namespace giacomobergami::petri {
 
             friend std::ostream &operator<<(std::ostream &os, const petri &petri);
         };
-
         bool is_valid_configuration(const std::unordered_set<std::string>& C, struct petri& net);
-    } // petri
+
+} // petri
 
 #endif //PETRI_PETRI_H

@@ -32,8 +32,11 @@ namespace giacomobergami {
             net.P.emplace(mark);
         }
 
-        void elementary_net::add_transition(const std::string &transition) {
-            net.T.insert(transition);
+        void elementary_net::add_transition(const std::string &transition, double weight) {
+            if (firing_weight.emplace(transition, weight).second) {
+                net.T.insert(transition);
+            }
+
         }
 
         bool elementary_net::add_input_place(const std::string &s, const std::string &t, size_t n) {

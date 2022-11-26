@@ -26,14 +26,14 @@
 #ifndef PETRI_REACHABILITY_GRAPH_H
 #define PETRI_REACHABILITY_GRAPH_H
 
+#include <yaucl/hashing/umap_hash.h>
 #include <string>
 #include <unordered_map>
 #include <giacomobergami/petri/elementary_net.h>
 #include <queue>
 
 namespace giacomobergami::petri {
-        std::unordered_map<std::string, std::unordered_map<std::string, std::unordered_set<std::string>>>  reachability_graph(const giacomobergami::petri::elementary_net& net);
-
-        std::string reachability_to_graphviz(const std::unordered_map<std::string, std::unordered_map<std::string, std::unordered_set<std::string>>>& mark_edges);
+    reachability_graph as_reachability_graph(const giacomobergami::petri::elementary_net& net);
+    reachability_graph as_probabilistic_reachability_graph(const giacomobergami::petri::elementary_net& net);
 }
 #endif //PETRI_REACHABILITY_GRAPH_H

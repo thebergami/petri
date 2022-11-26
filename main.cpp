@@ -73,9 +73,9 @@ void ex2(elementary_net& net) {
 
 int main() {
     elementary_net net;
-    ex1(net);
+    ex2(net);
 
-    auto l = reachability_graph(net);
-    std::cout << reachability_to_graphviz(l) << std::endl;
+    auto l = as_probabilistic_reachability_graph(net);
+    l.dot(std::cout);
     return 0;
 }
